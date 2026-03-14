@@ -7,14 +7,14 @@ from abc import ABCMeta, abstractmethod
 
 # Creamos Primero las Enumeraciones presentes en el diagrama UML con el módulo enum
 
-class Clase(Enum):
+class EClase(Enum):
     EJECUTOR = 0
     ECLIPSE = 1
     SOBERANO = 2
 
 
 
-class Ubicacion(Enum):
+class EUbicacion(Enum):
     ENDOR = 0
     CUMULO_RAIMOS = 1
     NEBULOSA_KALIIDA = 2
@@ -27,7 +27,7 @@ class UnidadCombate(metaclass=ABCMeta):
 
     def __init__(self, id_combate : str, num_cod : int):
         self.id_combate = id_combate
-        self.num_cod = num_cod
+        self._num_cod = num_cod # Importante calificar este atributo como privado al ser una identifiación de odificación
 
     @abstractmethod
 
@@ -36,7 +36,7 @@ class UnidadCombate(metaclass=ABCMeta):
 
     @abstractmethod
 
-    def mostrar_repuestos(self):
+    def get_repuestos(self):
         pass
 
 
@@ -48,12 +48,12 @@ class Repuesto():
     def __init__(self, nombre: str, proveedor: str, numero: int, precio : int):
         self.nombre = nombre
         self.proveedor = proveedor
-        self.numero = numero
+        self._numero = numero  # Nos pide explícitamente el enunciado que pongamos este atributo como privado
         self.precio = precio
 
     
     def __str__(self):
-        return f"Nombre: {self.nombre}; Proveedor: {self.proveedor}, Numero: {self.numero}, Precio: {self.precio}"
+        return f"Nombre: {self.nombre}; Proveedor: {self.proveedor}, Numero: {self._numero}, Precio: {self.precio}"
 
 
     def mostrar_informacion(self):
@@ -62,6 +62,9 @@ class Repuesto():
 
     
 
+'''
+
+¿Implementación?
 
 class Catalogo():
     def __init__(self):
@@ -75,7 +78,8 @@ class Catalogo():
         for i in self.repuestos:
             cadena += str(i) + "\n"
         return cadena
-    
+
+'''
 
 
 class TripuPasaje():
@@ -89,12 +93,44 @@ class TripuPasaje():
 
 
 class Nave(UnidadCombate):
-    def __init__(self, id_combate: str, num_cod: int, nombre: str, piezas_repuesto):
+    def __init__(self, id_combate: str, num_cod: int, nombre: str):
         super().__init__(id_combate, num_cod)
         self.nombre = nombre
-        self.piezas_repuesto = Catalogo()
+        self.piezas_repuesto = []
+    
+
+    def consultar_repuesto(self, nombre:str):
+        for repuesto in self.piezas_repuesto:
+            if repuesto.nombre == nombre:
+                return True
+        return False
+    
+
+    def mostrar_informacion(self):
+        print(f"Id_combate: {self.id_combate}; Num_cod: {self.num_cod}; Nombre: {self.nombre}")
+    
+    def get_repuestos(self):
+        for i in self.piezas_repuesto:
+            print(i + '\n')
+
+    # Añadir aquí anyadir_repuestos() ?
 
 
-    def mostrar_repuestos():
-        pass
 
+
+class EstacionEspacial(TripuPasaje, Nave):
+
+    def __init__(self, id_combate: str, num_cod: int, nombre: str, tripulacion: int, pasaje : int, ubicacion: EUbicacion):
+        TripuPasaje.__init__(tripulacion, pasaje)
+        Nave.__init__(id_combate, num_cod, nombre)
+        self.ubicacion = ubicacion
+
+    def mostrar_informacion(self):
+        print(f"Id_combate: {self.id_combate}; Num_cod: {self.num_cod}; Nombre: {self.nombre}")
+
+
+
+
+hola = EClase.ECLIPSE
+
+print(hola)
