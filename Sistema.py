@@ -46,6 +46,8 @@ class UnidadCombate(metaclass=ABCMeta):
 
     def get_catalogo(self):
         pass
+    
+    
 
 
 # ------------------------------ 
@@ -69,7 +71,11 @@ class Repuesto():
 
     def _get_numero(self):
         return self._numero
-
+    
+    def _set_numero(self,nuevo):
+        if nuevo <0:
+            raise ValueError('El stock no puede ser negativo')
+        self._numero = nuevo
 # ------------------------------ 
     
 '''
@@ -105,13 +111,14 @@ class Nave(UnidadCombate):
         super().__init__(id_combate, num_cod)
         self.nombre = nombre
         
-    
+
     def consultar_repuesto(self, nombre:str):
         busqueda = nombre.lower().strip()
         for repuesto in self.piezas_repuesto:
             if repuesto.nombre.lower().strip() == busqueda:
                 return True
         return False
+
     
     def mostrar_informacion(self):
         print(f"Id_combate: {self.id_combate}; Num_cod: {self._num_cod}; Nombre: {self.nombre}")
@@ -194,17 +201,14 @@ class Almacen():
         return total
     
     def actualizar(self, nombre_repuesto: str, cantidad: int):
-        # funcion para mantener el stock. Cantidad positiva añadir, cantidad negativa eliminar. Si llega a 0, eliminamos
-        # como catalogo es una lista,necesitamos el indice para borrar cuando llegue a 0
-        for i, repuesto in enumerate(self.catalogo): 
+        # funcion para mantener el stock. Cantidad positiva añadir, cantidad negativa eliminar.
+        for repuesto in self.catalogo: 
             if repuesto.nombre.lower() == nombre_repuesto.lower():
-                if repuesto._get_numero() + cantidad < 0: #no puede haber stock negativo
+                nuevo_stock = repuesto._get_numero() + cantidad
+                if nuevo_stock < 0: #no puede haber stock negativo
                     raise ValueError(f'Stock insuficiente')
-                repuesto._numero += cantidad   
-                if repuesto._numero == 0:
-                    self.catalogo.pop(i)
-                else:
-                    print(f'Stock actualizado')
+                repuesto._set_numero(cantidad)    # no habria falta un set_numero????? 
+                print(f'Stock actualizado')
                 return
         raise ValueError("Repuesto no encontrado. Hay que darlo de alta en el sistema.")  # decimos esto para que cada vez que un operario quiera actualizar no tenga que meter toda la información del repuesto
 
@@ -227,23 +231,6 @@ class FlotaEspacial():
     def __init__(self):
         self.ud_combate_imperial = []
         self.almacenes = []
-    '''
-    def adquirir_repuesto(self, nave:str, nombre_repuesto:str, cantidad:int, almacenes: list):
-        # vemos si esa nave tiene ese repuesto
-        if not nave.consultar_repuesto(nombre_repuesto):
-            print(f'La nave {nave} no usa el repuesto: {nombre_repuesto}')
-            return []
-        
-        repuestos_adquiridos = []
-        cantidad_solicitada = cantidad
-        
-        # si lo tiene, comprobamos en los almacenes los stocks
-        for almacen in almacenes:
-            stock_disp = almacen.comprobar_stock(nombre_repuesto)
-            if True: #esto se complica. --> cambio a que comprobar_stock() devuelva (bool,cantidad)
-    '''
-
-
 
     def anyadir_almacen(self, almacen: Almacen):
         self.almacenes.append(almacen)
@@ -251,7 +238,6 @@ class FlotaEspacial():
     
     def anyadir_nave(self, nave: Nave):
         self.ud_combate_imperial.append(nave)
-
 
 
     # El operario mantiene y lista stock 
@@ -294,7 +280,13 @@ class FlotaEspacial():
                     return False
         raise ValueError('Unidad de Combate no encontrada en la Flota Espacial')
     
-
+    def anyadir_repuesto_a_nave(self,id_nave:str, nombre: str, proveedor:str, cantidad:int, precio:int):
+        # Como la nave tiene repuestos en su catalogo (sin stock, solo referenciados)
+        # para la funcion anyadir_catalogo en Nave
+        for nave in self.ud_combate_imperial:
+            if nave.id_combate == id_nave:
+                nave.anyadir_catalogo(nombre,proveedor,cantidad,precio)
+                
 
     def adquirir_repuesto(self, nombre_repuesto:str, id: str, cantidad:int):
         consulta = self.consultar_repuesto(nombre_repuesto, id)
@@ -324,44 +316,52 @@ if __name__ == "__main__":
 
     # -- PRUEBA MARÍA (ANOTADO JOSE) --
 
-    # CAMBIA LO DEL SI ES = 0, SE QUITA
+
     # Poner en las funciones donde modificas numero, una funcion en repuesto para modificarlo? Y así evitar _numer
 
-
+    # CREAMOS LA FLOTA Y UN ALMACÉN
     print("Pruebas de OPERARIO" + '\n')
-    almacen_1= Almacen('Almacen Maria', 'Marte')
     mi_flota= FlotaEspacial()
-    rep1 = Repuesto('Tornillo oro','Marias', 200000, 13)
-    almacen_1.catalogo.append(rep1) # Corregir desde una funcion desde miflota
-    print(f'Almacen: {almacen_1.nombre} -> Existencias: {almacen_1.contar_existencias()}')
-
+    almacen_1= Almacen('Almacen Maria', 'Marte')
     mi_flota.anyadir_almacen(almacen_1)
     
-    nav1 = NaveEstelar("MCN-2005", 123, 'MCN', 10, 5, 'ECLIPSE' ) # Eclipse? No debería ser un tipo enumeración
+    # DAMOS DE ALTA UN REPUESTO
+    mi_flota.dar_de_alta('Tornillo oro', 'Marias', 200000, 13, 'Almacen Maria')
+    print(f'Almacen: {almacen_1.nombre} -> Existencias: {almacen_1.contar_existencias()}')
+
+    # CREAMOS UNA NAVE Y LA AÑADIMOS A LA FLOTA
+    nav1 = NaveEstelar("MCN-2005", 123, 'MCN', 10, 5, EClase.ECLIPSE ) 
+    mi_flota.anyadir_nave(nav1)
     nav1.mostrar_informacion()
     
-
-    nav1.piezas_repuesto.append(rep1) # Corregir con implementacion de funcion
-    print(f'¿Quedan tornillos de oro?: {nav1.consultar_repuesto('Tornillo oro')}')
-    print(f'¿Quedan tornillos de cristal?: {nav1.consultar_repuesto('Tornillo cristal')}')
+    # AQUI EL COMANDANTE AÑADIRÍA ESE REPUESTO A ESA NAVE
+    mi_flota.anyadir_repuesto_a_nave('MCN-2005', 'Tornillo oro', 'Marias', 200000, 13)
     
-    #prueba de actualizacion de stock que existe
+    # CONSULTAMOS LOS REPUESTOS DE LAS NAVES
+    print(f'Usa la nave {nav1.nombre} tornillos de oro?: {mi_flota.consultar_repuesto('Tornillo oro', "MCN-2005")}')
+    print(f'Usa la nave {nav1.nombre} tornillos de cristal?: {mi_flota.consultar_repuesto('Tornillo cristal', "MCN-2005")}')
+    
+    # ACTUALIZAMOS STOCK
+    # - Añadir
     mi_flota.actualizar('Tornillo oro',13)
-    mi_flota.actualizar('Tornillo oro',-200013)  #vemos si se elimina porque se queda a 0
-    print(f'Vacio?: {len(almacen_1.catalogo)}') #aqui me sale 1, deberia ser 0
+    print('Stock final: \n')
+    mi_flota.listar_repuestos()
     
-    # dar de alta
-    # mi_flota.actualizar("Motor de Salto", 5)
-
-
-
+    
+    # - Eliminar
+    mi_flota.actualizar('Tornillo oro',-12)
+    print(f'Stock final: {mi_flota.listar_repuestos()}')
+    
+    # - Retirar más del disponible
+    mi_flota.actualizar('Tornillo oro',-1200000)
 
 
     # -- PRUEBA JOSE 
     print("PRUEBAS DE COMANDANTE" + '\n')
 
     nav1.anyadir_catalogo('Tornillo de Diamante', 'Locs', 0, 20) # Ponemos 0 en cantidad pues solo es referencia
-    mi_flota.anyadir_nave(nav1)
+    # HE PENSADO PONER ESTO DESDE MI FLOTA??
+    
     
     mi_flota.dar_de_alta('Tornillo de Diamante', 'Locs', 200, 20, 'Almacen Maria')
 
