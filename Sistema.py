@@ -5,9 +5,38 @@
 from enum import Enum
 from abc import ABCMeta, abstractmethod
 
+
+
+# -----------------------
+# EXCEPCIONES
+
+class ErrorImperio(Exception):
+    pass
+
+class ErrorInexistenciaUd(ErrorImperio):
+    # cuando una entidad: unidad de combate o almacén, no existe
+    pass
+
+class ErrorInexistenciaAlmacen(ErrorInexistenciaUd):
+    # cuando un almacén no existe
+    pass
+
+class ErrorInexistenciaNave(ErrorInexistenciaUd):
+    pass
+
+class ErrorRepuesto(ErrorImperio):
+    pass
+
+class ErrorRepuestoNoCatalogo(ErrorRepuesto):
+    # consultar o actualizar un repuesto que no tenemos en el catalogo
+    pass
+
+class ErrorStockInsuficiente(ErrorImperio):
+    pass
+
 # ------------------------------ 
 
-# Creamos Primero las Enumeraciones presentes en el diagrama UML con el módulo enum
+# Enumeraciones presentes en el diagrama UML con el módulo enum
 class EClase(Enum):
     EJECUTOR = 0
     ECLIPSE = 1
@@ -48,8 +77,6 @@ class UnidadCombate(metaclass=ABCMeta):
         pass
     
     
-
-
 # ------------------------------ 
 
 # Creammos las distintas clases del esquema
@@ -118,6 +145,8 @@ class Nave(UnidadCombate):
             if repuesto.nombre.lower().strip() == busqueda:
                 return True
         return False
+        # o podemos lanzar un error
+        # raise ErrorRepuestoNoCatalogo(f"La nave '{self.nombre}' no tiene el repuesto '{nombre}')
 
     
     def mostrar_informacion(self):
@@ -190,9 +219,13 @@ class Almacen():
     
     def comprobar_stock(self, nombre_repuesto): #devuelve si hay stock de ese repuesto que consulta
         for repuesto in self.catalogo:
-            if repuesto.nombre == nombre_repuesto and repuesto._numero > 0:
-                return True,repuesto._numero
-        return False,0
+            if repuesto.nombre.lower().strip() == nombre_repuesto.lower().strip():
+                cantidad = repuesto._get_numero()
+                if cantidad >0:
+                    return True, cantidad
+                else:
+                    return False, 0
+        raise ErrorRepuestoNoCatalogo(f"El repuesto '{nombre_repuesto}' no existe en el catálogo.")
     
     def contar_existencias(self): #contar las existencias del almacen de todos los repuestos
         total = 0
@@ -206,11 +239,11 @@ class Almacen():
             if repuesto.nombre.lower() == nombre_repuesto.lower():
                 nuevo_stock = repuesto._get_numero() + cantidad
                 if nuevo_stock < 0: #no puede haber stock negativo
-                    raise ValueError(f'Stock insuficiente')
-                repuesto._set_numero(cantidad)    # no habria falta un set_numero????? 
+                    raise ErrorStockInsuficiente(f'Stock insuficiente')
+                repuesto._set_numero(nuevo_stock)    # no haria falta un set_numero????? 
                 print(f'Stock actualizado')
                 return
-        raise ValueError("Repuesto no encontrado. Hay que darlo de alta en el sistema.")  # decimos esto para que cada vez que un operario quiera actualizar no tenga que meter toda la información del repuesto
+        raise ErrorRepuestoNoCatalogo(f"El repuesto '{nombre_repuesto}' no existe en el catálogo. Hay que darlo de alta en el sistema.")  # decimos esto para que cada vez que un operario quiera actualizar no tenga que meter toda la información del repuesto
 
     def obtener_catalogo(self):
         # para la funcionalidad de listar_catalgo del operario
@@ -219,9 +252,9 @@ class Almacen():
 
     def obtener_repuesto(self, nombre_repuesto:str):
         for repuesto in self.catalogo:
-            if repuesto.nombre == nombre_repuesto:
+            if repuesto.nombre.lower() == nombre_repuesto.lower():
                 return repuesto
-        return False
+        raise ErrorRepuestoNoCatalogo(f"El repuesto '{nombre_repuesto}' no está en el catálogo de este almacén.")
         
 
 # ------------------------------         
@@ -235,10 +268,8 @@ class FlotaEspacial():
     def anyadir_almacen(self, almacen: Almacen):
         self.almacenes.append(almacen)
 
-    
     def anyadir_nave(self, nave: Nave):
         self.ud_combate_imperial.append(nave)
-
 
     # El operario mantiene y lista stock 
     def listar_repuestos(self):
@@ -258,27 +289,29 @@ class FlotaEspacial():
             try:
                 almacen.actualizar(nombre_repuesto, cantidad)
                 return
-            except ValueError:
-                print('No está el producto. Hay que darlo de alta')
+            except ErrorRepuestoNoCatalogo:
+                continue
+        raise ErrorRepuestoNoCatalogo(f"El repuesto '{nombre_repuesto}' no se ha encontrado en ningún almacén.")
         # si no se encontro en ningun almacen, es porque hay que darlo de alta
 
 
     def dar_de_alta(self, nombre_repuesto:str, proveedor: str, cantidad:int, precio:int, nombre_almacen:str):
+        #Buscamos si el almacen existe
+        encontrado = False
         for almacen in self.almacenes:
             if almacen.nombre == nombre_almacen:
-                almacen.dar_de_alta(nombre_repuesto, proveedor, cantidad, precio)
-
-        
+                encontrado = almacen
+                break
+        if not encontrado:
+            raise ErrorInexistenciaAlmacen(f"El almacén '{nombre_almacen}' no está registrado.")
+        #Si existe damos de alts
+        almacen.dar_de_alta(nombre_repuesto, proveedor, cantidad, precio)
     
     def consultar_repuesto(self, nombre_repuesto: str, id: str):
         for udcombate in self.ud_combate_imperial:
             if udcombate.id_combate == id:
-                consulta = udcombate.consultar_repuesto(nombre_repuesto)
-                if consulta:
-                    return True
-                else:
-                    return False
-        raise ValueError('Unidad de Combate no encontrada en la Flota Espacial')
+                return udcombate.consultar_repuesto(nombre_repuesto)
+        raise ErrorInexistenciaNave(f"Unidad de Combate con id '{id}' no encontrada en la Flota Espacial.")        
     
     def anyadir_repuesto_a_nave(self,id_nave:str, nombre: str, proveedor:str, cantidad:int, precio:int):
         # Como la nave tiene repuestos en su catalogo (sin stock, solo referenciados)
@@ -286,27 +319,53 @@ class FlotaEspacial():
         for nave in self.ud_combate_imperial:
             if nave.id_combate == id_nave:
                 nave.anyadir_catalogo(nombre,proveedor,cantidad,precio)
-                
+                return
+        raise ErrorInexistenciaNave(f"La nave '{id_nave}' no está registrada en la flota.")
 
     def adquirir_repuesto(self, nombre_repuesto:str, id: str, cantidad:int):
+        # Vemos si la nave usa este repuesto
         consulta = self.consultar_repuesto(nombre_repuesto, id)
         if not consulta:
-            raise ValueError('Repuesto No Disponible para la Nave Especificada')
-    
+            raise ErrorRepuestoNoCatalogo(f"El repuesto '{nombre_repuesto} no está en el catálogo de la Nave '{id}'.")
+        #comprobamos el stock de los almacenes
+        for almacen in self.almacenes:
+            comprobacion, cant_alm = almacen.comprobar_stock(nombre_repuesto)
+            if comprobacion: #vemos si existe el repuesto en el almacen
+                if cant_alm>=cantidad:
+                    almacen.actualizar(nombre_repuesto, -cantidad)
+                    repuesto = almacen.obtener_repuesto(nombre_repuesto)
+                    return Repuesto(nombre_repuesto, repuesto.proveedor, cantidad, repuesto.precio)
+                else: #existe pero no tiene stock suficiente
+                    raise ErrorStockInsuficiente(f"Stock insuficiente en el almacén '{almacen.nombre}'. Cantidad disponible: {cant_alm}")
+        # entonces el repuesto no está en ningún almacen       
+        raise ErrorRepuestoNoCatalogo(f"No hay repuestos del tipo '{nombre_repuesto}' en ningún almacén.")
+
+'''
+Esto es similar al de teoria, pero a mi me gusta menos.
+def adquirir_repuesto(self,nombre_repuesto,id,cantidad):
+    adquirido = None
+    try:
+        consulta = self.consultar_repuesto(nombre_repuesto, id)
+        if not consulta:
+            raise ErrorRepuestoNoCatalogo(f"El repuesto '{nombre_repuesto} no está en el catálogo de la Nave '{id}'.")
+        #comprobamos el stock de los almacenes
         for almacen in self.almacenes:
             comprobacion, cant_alm = almacen.comprobar_stock(nombre_repuesto)
             if comprobacion and cant_alm >= cantidad:
                 almacen.actualizar(nombre_repuesto, -cantidad)
                 repuesto = almacen.obtener_repuesto(nombre_repuesto)
-                return Repuesto(nombre_repuesto, repuesto.proveedor, cantidad, repuesto.precio)
-
-        raise ValueError('No hay repuestos de este tipo en ningún almacen')
-
-
-            
-        
-
-    
+                break
+        if not adquirido:
+            raise ErrorStockInsuficiente(f"Stock insuficiente en el almacén '{almacen.nombre}'. Cantidad disponible: {cant_alm}")
+    except ErrorInexistenciaNave:
+        print("Error: Nave no encontrada.")
+    except ErrorRepuestoNoCatalogo:
+        print("Error: Repuesto no disponible en esta nave.")
+    except ErrorStockInsuficiente:
+        print("Error: Fallo en el inventario de los almacenes.")
+    finally:
+        return repuesto_adquirido
+'''             
              
  
 # ------------------------------        
