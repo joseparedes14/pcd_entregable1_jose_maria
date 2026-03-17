@@ -82,24 +82,47 @@ class UnidadCombate(metaclass=ABCMeta):
 # Creammos las distintas clases del esquema
 
 class Repuesto():
+    '''
+    TAD Repuesto (DESCRIPCIÓN: Clase que representa una pieza con los atributos nombre, proveedor, cantidad y precio, VALORES:
+    dos cadenas (nombre y proveedor) y dos enteros (numero y precio); OPERACIONES: __init__, mostrar_información, _get_numero, _set_numero)
+    '''
+    
     def __init__(self, nombre: str, proveedor: str, numero: int, precio : int):
+        '''
+        CrearRepuesto(str, str, int, int) --> Repuesto
+        Efecto: crea un objeto Repuesto con nombre, proveedor, cantidad inicial y precio.
+        Excepciones: el atributo numero (cantidad) se define como privado
+        '''
         self.nombre = nombre
         self.proveedor = proveedor
         self._numero = numero  # Nos pide explícitamente el enunciado que pongamos este atributo como privado
         self.precio = precio
     
     def __str__(self):
+        '''
+        Efecto: devuelve una cadena con toda la información del repuesto para imprimir
+        '''
         return f"Nombre: {self.nombre}; Proveedor: {self.proveedor}, Numero: {self._numero}, Precio: {self.precio}"
 
 
-    def mostrar_informacion(self):
+    def mostrar_informacion(self):   
+        '''
+        Efecto: Imprime en la consola el repuesto. Invoca el método mágico __str__ definido en la clase
+        '''
         print(self)
 
 
     def _get_numero(self):
+        '''
+        Efecto: Devuelve la cantidad de un repuesto disponible. Es un método privado para controlar la recuperación del atributo privado _numero.
+        '''
         return self._numero
     
     def _set_numero(self,nuevo):
+        '''
+        Efecto: Modifica la cantidad de un repuesto disponible. 
+        Excepciones: Si el nuevo valor de numero es negativo, lanzamos una excepción ValueError porque no puede haber cantidad negativa de un repuesto
+        '''
         if nuevo <0:
             raise ValueError('El stock no puede ser negativo')
         self._numero = nuevo
@@ -126,7 +149,14 @@ class Catalogo():
 
 
 class TripuPasaje():
+    '''
+    TAD TripuPasaje (DESCRIPCIÓN: Clase que agrupa los atributos de tripulacion y pasaje; VALORES: dos enteros; OPERACIONES: __init__)
+    '''
     def __init__(self, tripulacion: int, pasaje:int):
+        '''
+        CrearTripuPasaje(int, int) --> TripuPasaje
+        Efecto: Inicializa los valores de tripulación (personas responsables de la unidad) y pasaje (numero de personas que caben en la unidad que no participan en su operación)
+        '''
         self.tripulacion = tripulacion
         self.pasaje = pasaje
 
@@ -134,14 +164,31 @@ class TripuPasaje():
 
 
 class Nave(UnidadCombate):
-    def __init__(self, id_combate: str, num_cod: int, nombre: str):
+    '''
+    TAD Nave (DESCRIPCIÓN: Subclase de UnidadCombate que representa todas las naves. Tienen como atributos id_combate y num_cod (heredado de UnidadCombate) y un nombre y una lista de objetos de la clase Repuesto;
+    VALORES: dos str(id_combate y nombre), un int (num_cod) y una list (piezas_repuesto); OPERACIONES: __init__, consultar_repuesto, mostrar_información,get_repuestos, get_catalogo y anyadir_catalogo)
+    '''
+
+    def __init__(self, id_combate: str, num_cod: int, nombre: str, piezas_repuesto: list):
+        '''
+        CrearNave(str,int,str)--> Nave
+        Efecto: Inicializa la nave llamando al constructor de la superclase UnidadCombate con super() para 
+        recibir los datos id_combate y num_cod, e inicializa su nombre.
+        '''
         super().__init__(id_combate, num_cod)
         self.nombre = nombre
+        self.piezas_repuesto = piezas_repuesto
+        
         
 
     def consultar_repuesto(self, nombre:str):
+        '''
+        Efecto: Busca si un repuesto con un nombre específico (nombre) forma parte del catalogo de la nave.
+        Gestiona mayusculas/minúsculas y espacios para evitar errores de usuario para comparar ocn piezas_repuesto.
+        Si está dentro de su catalogo de repuestos (piezas_repuesto) devuelve True.
+        '''
         busqueda = nombre.lower().strip()
-        for repuesto in self.piezas_repuesto:
+        for repuesto in self.piezas_repuesto: 
             if repuesto.nombre.lower().strip() == busqueda:
                 return True
         return False
@@ -150,18 +197,31 @@ class Nave(UnidadCombate):
 
     
     def mostrar_informacion(self):
+        '''
+        Efecto: implementa el método abstracto heredado para imprimir por pantalla el id_combate, el num_cod y el nombre
+        '''
         print(f"Id_combate: {self.id_combate}; Num_cod: {self._num_cod}; Nombre: {self.nombre}")
     
     def get_repuestos(self):
-        # Muestra los nombres de piezas que este tipo de nave puede usar
+        '''
+        Efecto: Recorre e imprime la lista de objetos Repuesto asociados a la nave dentro de su catalogo lista de repuestos.
+        Muestra los nombres de piezas que este tipo de nave puede usar.
+        '''
         for i in self.piezas_repuesto:
             print(str(i) + '\n')
 
     def get_catalogo(self):
+        '''
+        Efecto: devuelve la lista de objetos Repuesto asociados a la nave.
+        '''
         return self.piezas_repuesto
 
 
     def anyadir_catalogo(self, nombre: str, proveedor: str, cantidad:int, precio:int):
+        '''
+        Efecto: Instancia un nuevo objeto Repuesto y lo añade a la lista piezas_repuesto de la nave. Sirve para que una nave sepa
+        qué repuestos puede solicitar al almacén.
+        '''
         repuesto = Repuesto(nombre, proveedor, cantidad, precio)
         self.piezas_repuesto.append(repuesto)
 
@@ -169,13 +229,26 @@ class Nave(UnidadCombate):
 # ------------------------------ 
 
 class EstacionEspacial(TripuPasaje, Nave):
+    '''
+    TAD EstacionEspacial (DESCRIPCIÓN: Clase que representa un tipo de nave,los atributos que tiene son id_combate, num_cod y nombre (hereadados de Nave),
+    tripulacion y pasaje (heredados de UnidadCombte) y una ubicacion basada en la enumeración EUbicacion; VALORES: str, int y EUbicacion;
+    OPERACIONES: __init__, mostrar_información
+    '''
 
     def __init__(self, id_combate: str, num_cod: int, nombre: str, tripulacion: int, pasaje : int, ubicacion: EUbicacion):
+        '''
+        CrearEstacionEspacial (str, int, str, int, int, EUbicacion) --> EstacionEspacial
+        Efecto: Construye el objeto inciializando los atributos correspondientes de su herencia múltiple y la ubicacion. En lugar de usar super(),
+        realizamos llamadas individuales a los constructores de las clases padre para evitar ambigüedades.
+        '''
         TripuPasaje.__init__(self,tripulacion, pasaje)
         Nave.__init__(self,id_combate, num_cod, nombre)
         self.ubicacion = ubicacion
 
     def mostrar_informacion(self):
+        '''
+        Efecto: sobreescribe el método de la superclase Nave para mostrar la información relativa de este tipo de Nave
+        '''
         print(f"Id_combate: {self.id_combate} -- Num_cod: {self._num_cod} -- Nombre: {self.nombre}")
 
 # ------------------------------ 
