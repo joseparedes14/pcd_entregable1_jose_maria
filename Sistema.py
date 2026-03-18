@@ -128,25 +128,6 @@ class Repuesto():
         self._numero = nuevo
 # ------------------------------ 
     
-'''
-
-¿Implementación?
-
-class Catalogo():
-    def __init__(self):
-        self.repuestos = []
-    
-    def anyadir_repuesto(self, nombre: str, proveedor: str, numero: str, precio: int):
-        self.repuestos.append(Repuesto(nombre, proveedor, numero, precio))
-
-    def __str__(self):
-        cadena = ""
-        for i in self.repuestos:
-            cadena += str(i) + "\n"
-        return cadena
-
-'''
-
 
 class TripuPasaje():
     '''
@@ -169,7 +150,7 @@ class Nave(UnidadCombate):
     VALORES: dos str(id_combate y nombre), un int (num_cod) y una list (piezas_repuesto); OPERACIONES: __init__, consultar_repuesto, mostrar_información,get_repuestos, get_catalogo y anyadir_catalogo)
     '''
 
-    def __init__(self, id_combate: str, num_cod: int, nombre: str, piezas_repuesto: list):
+    def __init__(self, id_combate: str, num_cod: int, nombre: str):
         '''
         CrearNave(str,int,str)--> Nave
         Efecto: Inicializa la nave llamando al constructor de la superclase UnidadCombate con super() para 
@@ -177,8 +158,7 @@ class Nave(UnidadCombate):
         '''
         super().__init__(id_combate, num_cod)
         self.nombre = nombre
-        self.piezas_repuesto = piezas_repuesto
-        
+        self.piezas_repuesto = []
         
 
     def consultar_repuesto(self, nombre:str):
