@@ -234,43 +234,94 @@ class EstacionEspacial(TripuPasaje, Nave):
 # ------------------------------ 
 
 class NaveEstelar(TripuPasaje, Nave):
-    
+    '''
+    TAD NaveEstelar (DESCRIPCIÓN: Clase que representa un tipo de nave,los atributos que tiene son id_combate, num_cod y nombre (hereadados de Nave),
+    tripulacion y pasaje (heredados de UnidadCombte) y una clase basada en la enumeración EClase; VALORES: str, int y EClase;
+    OPERACIONES: __init__, mostrar_información
+    '''
     def __init__(self, id_combate: str, num_cod: int, nombre: str, tripulacion: int, pasaje : int, clase: EClase):
+        '''
+        CrearNaveEstelar (str, int, str, int, int, EClase) --> NaveEstelar
+        Efecto: Construye el objeto inciializando los atributos correspondientes de su herencia múltiple y la clase. En lugar de usar super(),
+        realizamos llamadas individuales a los constructores de las clases padre para evitar ambigüedades.
+        '''
         TripuPasaje.__init__(self,tripulacion, pasaje)
         Nave.__init__(self,id_combate, num_cod, nombre)
         self.clase = clase
     
     def mostrar_informacion(self):
+        '''
+        Efecto: sobreescribe el método de la superclase Nave para mostrar la información relativa de este tipo de Nave
+        '''
         print(f'Id_combate: {self.id_combate} -- Num_cod: {self._num_cod} -- Nombre: {self.nombre}')
         
 
 # ------------------------------ 
 
 class CazaEstelar(Nave):
-   
+    '''
+    TAD CazaEstelar (DESCRIPCIÓN: Clase que representa un tipo de nave,los atributos que tiene son id_combate, num_cod y nombre (hereadados de Nave),
+    y dotacion; VALORES: str e int;
+    OPERACIONES: __init__, mostrar_información
+    '''
     def __init__(self, id_combate: str, num_cod: int, nombre: str, dotacion: int):
+        '''
+        CrearCazaEstelar (str, int, str, int) --> CazaEstelar
+        Efecto: Construye el objeto inciializando los atributos correspondientes de su herencia y la dotación. Aquí utilizamos el método
+        super() porque no hay ambigüedades.
+        '''
         super().__init__(id_combate, num_cod, nombre)
         self.dotacion = dotacion
     
     def mostrar_informacion(self):
+        '''
+        Efecto: sobreescribe el método de la superclase Nave para mostrar la información relativa de este tipo de Nave
+        '''
         print(f'd_combate: {self.id_combate} -- Num_cod: {self._num_cod} -- Nombre: {self.nombre}')
         
 
 # ------------------------------ 
 
 class Almacen():
+    '''
+    TAD Almacen (DESCRIPCIÓN: Clase que representa un almacén,los atributos que tiene son nombre y localización; VALORES: str ;
+    OPERACIONES: __init__,dar_de_alta, comprobar_stock, contar_existencias, actualizar,obtener_catalogo, obtener_repuesto.
+    '''
+    
     
     def __init__(self, nombre: str, localizacion: str):
+        '''
+        CrearAlmacen (str, str) --> Almacén
+        Efecto: Construye el objeto incializando los atributos correspondientes. Además creamos una lista para el catálogo,
+        que no añadimos a los parámetros del constructor para posibilitar que una vez construido el almacén desde cero no se le obligue
+        a tener ya una lista de repuestos (que pueda inicializarse vacío).
+        '''
         self.nombre = nombre
         self.localizacion = localizacion
         self.catalogo = []
 
         
+    
     def dar_de_alta(self, nombre:str, proveedor:str, cantidad:int, precio:int):
+        '''
+        Efecto: Crear una instancia de la clase Repuesto y añadirla al catálogo por primera vez.
+        '''
         nuevo = Repuesto(nombre, proveedor, cantidad, precio)
         self.catalogo.append(nuevo)
     
+    
+    
     def comprobar_stock(self, nombre_repuesto): #devuelve si hay stock de ese repuesto que consulta
+        '''
+        Efecto: Devolver un booleano que indique si hay stock de un repuesto que queremos consultar a partir de su nombre.
+        Para ello recorremos todos los elementos disponibles en el catalogo de esta instancia de Almacén y depuramos
+        minúsculas/mayúsculas y espacios para ver si el nombre del repuesto consultado coincide con el nombre de algún repuesto del catálogo.
+        Una vez localizado el repuesto comprobamos la cantidad del mismo en el almacen (su stock) con el método _get_numero() que accede al atrbibuto
+        privado. Si esa cantidad es >0, entonces devolvemos que ese repuesto está en el Almacén y su stock. En caso contrario,
+        retornamos False y cantidad 0. 
+        Excepcion: Si al recorrer la lista de todos los repuestos del catalogo del almacén no lo encontramos, lanzamos una excepción de que 
+        el repuesto buscado no está en el catalogo de esta instancia de almacén.
+        '''
         for repuesto in self.catalogo:
             if repuesto.nombre.lower().strip() == nombre_repuesto.lower().strip():
                 cantidad = repuesto._get_numero()
@@ -280,14 +331,31 @@ class Almacen():
                     return False, 0
         raise ErrorRepuestoNoCatalogo(f"El repuesto '{nombre_repuesto}' no existe en el catálogo.")
     
+    
+    
     def contar_existencias(self): #contar las existencias del almacen de todos los repuestos
+        '''
+        Efecto: Contamos cuantas existencias, de todos los tipos de repuesto, tiene un almacén. Para ello
+        recorremos todos los repuestos del catalogo y sacamos el stock de cada uno. Esa cantidad se va sumando a un contador
+        llamado total, que será el entero que devolvamos.
+        '''
         total = 0
         for repuesto in self.catalogo:
             total += repuesto._get_numero()
         return total
     
+    
+    
     def actualizar(self, nombre_repuesto: str, cantidad: int):
-        # funcion para mantener el stock. Cantidad positiva añadir, cantidad negativa eliminar.
+        '''
+        Efecto: Mantiene el stock de los repuestos en el catálogo del almacén. Recibe el nombre del repuesto cuya cantidad(stock) se quiera modificar
+        y el importe de la misma (en el atributo cantidad). Si la cantidad es positiva, es que queremos aumentar el stock de ese repuesto,
+        si es negativa, es que queremos disminuirlo. Para ello recorremos la lista de repuestos en nuestro catálogo del almacén y comprobamos, como en el método anterior,
+        si ese repuesto que queremos actualizar se encuentra en el catálogo. Si no, devolveremos la misma excepción que antes, ErrorRepuestoNoCatalogo.
+        Una vez confirmado que ese repuesto está en el catálogo, calculamos el nuevo stock deseado, sumandole la cantidad deseada al stock existente.
+        Si es menor que cero, como no queremos mantener stock negativo de un repuesto, lanzamos la excepción ErrorStockInsuficiente.
+        En el caso contrario, actualizamos el stock con el método _set_numero().
+        '''
         for repuesto in self.catalogo: 
             if repuesto.nombre.lower() == nombre_repuesto.lower():
                 nuevo_stock = repuesto._get_numero() + cantidad
@@ -296,14 +364,26 @@ class Almacen():
                 repuesto._set_numero(nuevo_stock)    # no haria falta un set_numero????? 
                 print(f'Stock actualizado')
                 return
-        raise ErrorRepuestoNoCatalogo(f"El repuesto '{nombre_repuesto}' no existe en el catálogo. Hay que darlo de alta en el sistema.")  # decimos esto para que cada vez que un operario quiera actualizar no tenga que meter toda la información del repuesto
+        raise ErrorRepuestoNoCatalogo(f"El repuesto '{nombre_repuesto}' no existe en el catálogo. Hay que darlo de alta en el sistema.")  
+    
+    # Lanzamos ese error para que el usuario deba invocar a la funcion dar_de_alta(). Podríamos haberlo implementado todo aquí, que si no exista, se dé de alta
+    # automaticamente, pero hemos evitado esto para que cada vez que un operario quiera actualizar no tenga que meter toda la información del repuesto
 
+    
+    
     def obtener_catalogo(self):
-        # para la funcionalidad de listar_catalgo del operario
+        '''
+        Efecto: Función para devolver el catálogo de repuestos un almacén. Para la funcionalidad de listar_catalogo() del Operario.
+        '''
         return self.catalogo
     
 
+   
     def obtener_repuesto(self, nombre_repuesto:str):
+        '''
+        Efecto: Devolver la instancia de la clase Repuesto almacenada dentro de la lista catálogo de un Almacén. Si el nombre de repuesto buscado no coincide,
+        lanza una excepción ErrorRepuestoNoCatalogo.
+        '''
         for repuesto in self.catalogo:
             if repuesto.nombre.lower() == nombre_repuesto.lower():
                 return repuesto
@@ -313,20 +393,45 @@ class Almacen():
 # ------------------------------         
 
 class FlotaEspacial():
+    '''
+    TAD FlotaEspacial (DESCRIPCIÓN: Clase que representa la Flota Espacial, la organización; OPERACIONES: __init__,anyadir_almacen, 
+    anyadir_nave, listar_repuestos, actualizar,dar_de_alta, consultar_repuesto,anyadir_repuesto_a_nave,adquirir_repuesto.
+    '''
     
     def __init__(self):
+        '''
+        CrearFlotaEpacial()-->FlotaEspacial
+        Efecto: Creamos la clase contenedora, la organización. Inicialmente la flota cuando se crea está vacía, por lo que no le pasamos ningún atributo, simplemente
+        vamos a ir añadiendo unidades de combate y almacenes cuando lo haga el Operario o el Comandante. Para ello creamos dos listas vacias, una para las Unidades de Combate y
+        otra para los almacenes.
+        '''
         self.ud_combate_imperial = []
         self.almacenes = []
 
+
     def anyadir_almacen(self, almacen: Almacen):
+        '''
+        Efecto: Función para añadir un almacén a la lista de almacenes de la flota.
+        '''
         self.almacenes.append(almacen)
 
+
+
     def anyadir_nave(self, nave: Nave):
+        '''
+        Efecto: Función para añadir una nave a la lista de unidades de combate imperial de la flota.
+        '''
         self.ud_combate_imperial.append(nave)
 
-    # El operario mantiene y lista stock 
+    
     def listar_repuestos(self):
-        #listamos el stock de todos repuestos
+        '''
+        Efecto: Listamos los repuestos de todos los almacenes en la flota. Imprimos por pantalla
+        , para cada almacén de la lista de almacenes, todo su catalogo de repuestos con el método de la clase
+        Almacén obtener_catalogo(), que devolvía una lista de todos sus repuestos. Si esta lista existe, pues iteramos
+        por cada uno de sus instancias de Repuesto para imprimirlas. En el caso de no existir esa lista de repuestos en Almacén, devolvemos
+        que el almacén está vacío.
+        '''
         for almacen in self.almacenes:
             print(f'Repuestos en el Almacén : {almacen.nombre}')
             catalogo = almacen.obtener_catalogo()
@@ -336,8 +441,17 @@ class FlotaEspacial():
                 for repuesto in catalogo:
                     print(f"- {repuesto}")
     
+    
+    
     def actualizar(self,nombre_repuesto: str, cantidad:int):
-        # La Flota manda la tarea a almacen.
+        '''
+        Efecto: Actualizar el stock de un repuesto pero mandando la tarea a Almacén. Implementamos este método en esta clase
+        pues los clientes solo interactúan con esta clase. Este es un principio básico del encapsulamiento.
+        La flota recorre sus almacenes e invoca el método actualizar() de la clase Almacén. Si el repuesto se encuentra y 
+        se actualiza con éxito, el proceso termina. 
+        Excepciones: Si el repuesto no existe en ningún almacén tras recorrer la lista completa,  se lanza una excepción ErrorRepuestoNoCatalogo 
+        indicando que debe darse de alta.
+        '''
         for almacen in self.almacenes:
             try:
                 almacen.actualizar(nombre_repuesto, cantidad)
@@ -345,11 +459,15 @@ class FlotaEspacial():
             except ErrorRepuestoNoCatalogo:
                 continue
         raise ErrorRepuestoNoCatalogo(f"El repuesto '{nombre_repuesto}' no se ha encontrado en ningún almacén.")
-        # si no se encontro en ningun almacen, es porque hay que darlo de alta
+
 
 
     def dar_de_alta(self, nombre_repuesto:str, proveedor: str, cantidad:int, precio:int, nombre_almacen:str):
-        #Buscamos si el almacen existe
+        '''
+        Efecto: Registra un nuevo repuesto en un almacén específico de la flota. El método primero valida la existencia del almacén mediante una 
+        búsqueda por nombre en la lista de almacenes. Si se localiza, delega la creación del objeto Repuesto al método dar_de_alta() del almacén correspondiente.
+        Excepciones: Si el almacén no existe, lanza una excepción ErrorInexistenciaAlmacen,
+        '''
         encontrado = False
         for almacen in self.almacenes:
             if almacen.nombre == nombre_almacen:
@@ -357,40 +475,61 @@ class FlotaEspacial():
                 break
         if not encontrado:
             raise ErrorInexistenciaAlmacen(f"El almacén '{nombre_almacen}' no está registrado.")
-        #Si existe damos de alts
         almacen.dar_de_alta(nombre_repuesto, proveedor, cantidad, precio)
     
+    
+    
     def consultar_repuesto(self, nombre_repuesto: str, id: str):
+        '''
+        Efecto: Verifica si una unidad de combate específica tiene un repuesto determinado en su catálogo. Busca la unidad en 
+        la lista de la flota mediante su id_combate. Si la encuentra, delega la búsqueda del repuesto al método consultar_repuesto() 
+        de la propia unidad. 
+        Excepciones: Si la unidad no existe en el registro de la flota, lanza una excepción ErrorInexistenciaNave.
+        '''
         for udcombate in self.ud_combate_imperial:
             if udcombate.id_combate == id:
                 return udcombate.consultar_repuesto(nombre_repuesto)
         raise ErrorInexistenciaNave(f"Unidad de Combate con id '{id}' no encontrada en la Flota Espacial.")        
     
+    
     def anyadir_repuesto_a_nave(self,id_nave:str, nombre: str, proveedor:str, cantidad:int, precio:int):
-        # Como la nave tiene repuestos en su catalogo (sin stock, solo referenciados)
-        # para la funcion anyadir_catalogo en Nave
+        '''
+        Efecto: Registra un repuesto en el catálogo de una nave específica. Busca la unidad de combate en la flota por su id_nave. 
+        Si la localiza, invoca el método anyadir_catalogo() de la nave para que esta reconozca el repuesto como parte de 
+        su equipamiento. 
+        Excepciones: Si el id_nave no corresponde a ninguna nave registrada, lanza una excepción ErrorInexistenciaNave.
+        '''
         for nave in self.ud_combate_imperial:
             if nave.id_combate == id_nave:
                 nave.anyadir_catalogo(nombre,proveedor,cantidad,precio)
                 return
         raise ErrorInexistenciaNave(f"La nave '{id_nave}' no está registrada en la flota.")
 
+
+
     def adquirir_repuesto(self, nombre_repuesto:str, id: str, cantidad:int):
-        # Vemos si la nave usa este repuesto
+        '''
+        Efecto: Gestiona el proceso completo de transferencia de un repuesto desde la logística de la flota hacia una unidad de combate.
+        Primero comprueba si la nave tiene el repuesto en su catálogo técnico, es decir, si lo necesita para su funcionamiento. luego ecorre 
+        los almacenes buscando stock disponible del repuesto solicitado. Si hay stock suficiente, actualiza el inventario del almacén (restando/sumando la cantidad) 
+        y devuelve un nuevo objeto Repuesto con la cantidad adquirida.
+  
+        Excepciones: Lanza ErrorRepuestoNoCatalogo si la nave no usa la pieza o si no existe en los almacenes, y ErrorStockInsuficiente si la cantidad en el 
+        almacén es menor a la solicitada.
+        '''
         consulta = self.consultar_repuesto(nombre_repuesto, id)
         if not consulta:
             raise ErrorRepuestoNoCatalogo(f"El repuesto '{nombre_repuesto} no está en el catálogo de la Nave '{id}'.")
-        #comprobamos el stock de los almacenes
+
         for almacen in self.almacenes:
             comprobacion, cant_alm = almacen.comprobar_stock(nombre_repuesto)
-            if comprobacion: #vemos si existe el repuesto en el almacen
+            if comprobacion: 
                 if cant_alm>=cantidad:
                     almacen.actualizar(nombre_repuesto, -cantidad)
                     repuesto = almacen.obtener_repuesto(nombre_repuesto)
                     return Repuesto(nombre_repuesto, repuesto.proveedor, cantidad, repuesto.precio)
-                else: #existe pero no tiene stock suficiente
-                    raise ErrorStockInsuficiente(f"Stock insuficiente en el almacén '{almacen.nombre}'. Cantidad disponible: {cant_alm}")
-        # entonces el repuesto no está en ningún almacen       
+                else: 
+                    raise ErrorStockInsuficiente(f"Stock insuficiente en el almacén '{almacen.nombre}'. Cantidad disponible: {cant_alm}")      
         raise ErrorRepuestoNoCatalogo(f"No hay repuestos del tipo '{nombre_repuesto}' en ningún almacén.")
 
 '''
