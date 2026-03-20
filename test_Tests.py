@@ -21,7 +21,7 @@ def test_dar_alta():
 
 
 
-# Test asociado al correcto manejo de la función actualizar() dentro de flota
+# Test asociado al correcto manejo de la función actualizar() dentro de flota (integracion)
 
 def test_stock_insuficiente():
     flota = Sis.FlotaEspacial()
@@ -84,6 +84,39 @@ def test_adquirir_repuesto():
         flota.adquirir_repuesto('Tornillos', 'CAE2', 5)
 
     
+# Test asociado a la funcion contar_existencias
+def test_contar_existencias_almacen():
+    almacen = Sis.Almacen('A2','Venus')
+    almacen.dar_de_alta('Tornillos','Prov1',10,5)
+    almacen.dar_de_alta('Tornillos','Prov2',15,5)
+    
+    assert almacen.contar_existencias()==25
+    
 
+# Test para la clase Repuesto que comrpuebe que no puedes ponerle a un repusto stock negativo (unitario)
+def test_udneg_repuesto():
+    repuesto = Sis.Repuesto('Cristal Rosa','MC',10, 2)
+    with pytest.raises(ValueError):
+        repuesto._set_numero(-10)
         
 
+# Test para probar la herencia multiple en EstacionEspacial
+def test_herencia_estacionespacial():
+    estacion = Sis.EstacionEspacial('3928M',135,'Estacion Mayor',10,18,Sis.EUbicacion.ENDOR)
+    assert isinstance(estacion, Sis.Nave)
+    assert isinstance(estacion, Sis.TripuPasaje)
+    assert isinstance(estacion, Sis.UnidadCombate)
+    
+
+# Test para probar la herencia multiple en NaveEstelar
+def test_herencia_naveestelar():
+    nave = Sis.NaveEstelar('98471M',819,'Nave Mayor',5 ,10, Sis.EClase.EJECUTOR)
+    assert isinstance(nave, Sis.Nave)
+    assert isinstance(nave, Sis.TripuPasaje)
+    assert isinstance(nave, Sis.UnidadCombate)
+
+# Test para comprobar la herencia en CazaEstelar
+def test_herencia_cazaestelar():
+    caza = Sis.CazaEstelar('945721Q',1095,'Caza Mayor',100) 
+    assert isinstance(caza, Sis.Nave)
+    assert isinstance(caza, Sis.UnidadCombate)
