@@ -10,7 +10,7 @@ from abc import ABCMeta, abstractmethod
 # -----------------------
 # EXCEPCIONES
 
-class ErrorImperio(Exception):
+class ErrorImperio(Exception): # La clase general 
     pass
 
 class ErrorInexistenciaUd(ErrorImperio):
@@ -22,9 +22,10 @@ class ErrorInexistenciaAlmacen(ErrorInexistenciaUd):
     pass
 
 class ErrorInexistenciaNave(ErrorInexistenciaUd):
+    # cuando empleamos una nave que no existe
     pass
 
-class ErrorRepuesto(ErrorImperio):
+class ErrorRepuesto(ErrorImperio): # Clase general para los errores referentes a los repuestos
     pass
 
 class ErrorRepuestoNoCatalogo(ErrorRepuesto):
@@ -32,6 +33,7 @@ class ErrorRepuestoNoCatalogo(ErrorRepuesto):
     pass
 
 class ErrorStockInsuficiente(ErrorImperio):
+    # para cuando vamos a modificar un stock de un repuesto más de lo que se puede realizar
     pass
 
 # ------------------------------ 
@@ -59,7 +61,6 @@ class UnidadCombate(metaclass=ABCMeta):
     def __init__(self, id_combate : str, num_cod : int):
         self.id_combate = id_combate
         self._num_cod = num_cod # Importante calificar este atributo como privado al ser una identifiación de codificación
-        self.piezas_repuesto = []
 
     @abstractmethod
 
@@ -532,32 +533,7 @@ class FlotaEspacial():
                     raise ErrorStockInsuficiente(f"Stock insuficiente en el almacén '{almacen.nombre}'. Cantidad disponible: {cant_alm}")      
         raise ErrorRepuestoNoCatalogo(f"No hay repuestos del tipo '{nombre_repuesto}' en ningún almacén.")
 
-'''
-Esto es similar al de teoria, pero a mi me gusta menos.
-def adquirir_repuesto(self,nombre_repuesto,id,cantidad):
-    adquirido = None
-    try:
-        consulta = self.consultar_repuesto(nombre_repuesto, id)
-        if not consulta:
-            raise ErrorRepuestoNoCatalogo(f"El repuesto '{nombre_repuesto} no está en el catálogo de la Nave '{id}'.")
-        #comprobamos el stock de los almacenes
-        for almacen in self.almacenes:
-            comprobacion, cant_alm = almacen.comprobar_stock(nombre_repuesto)
-            if comprobacion and cant_alm >= cantidad:
-                almacen.actualizar(nombre_repuesto, -cantidad)
-                repuesto = almacen.obtener_repuesto(nombre_repuesto)
-                break
-        if not adquirido:
-            raise ErrorStockInsuficiente(f"Stock insuficiente en el almacén '{almacen.nombre}'. Cantidad disponible: {cant_alm}")
-    except ErrorInexistenciaNave:
-        print("Error: Nave no encontrada.")
-    except ErrorRepuestoNoCatalogo:
-        print("Error: Repuesto no disponible en esta nave.")
-    except ErrorStockInsuficiente:
-        print("Error: Fallo en el inventario de los almacenes.")
-    finally:
-        return repuesto_adquirido
-'''             
+
              
  
 # ------------------------------        
@@ -603,14 +579,13 @@ if __name__ == "__main__":
     mi_flota.actualizar('Tornillo oro',-12)
     print(f'Stock final: {mi_flota.listar_repuestos()}')
     
-    # - Retirar más del disponible
-    mi_flota.actualizar('Tornillo oro',-1200000)
+   
 
 
     # -- PRUEBA JOSE 
     print("PRUEBAS DE COMANDANTE" + '\n')
 
-    nav1.anyadir_catalogo('Tornillo de Diamante', 'Locs', 0, 20) # Ponemos 0 en cantidad pues solo es referencia
+    mi_flota.anyadir_repuesto_a_nave('MCN-2005', 'Tornillo de Diamante', 'Marias', 0, 20)
     # HE PENSADO PONER ESTO DESDE MI FLOTA??
     
     
@@ -621,8 +596,8 @@ if __name__ == "__main__":
 
     repuesto_necesitado = mi_flota.adquirir_repuesto('Tornillo de Diamante', 'MCN-2005', 20)
 
-    print(repuesto_necesitado) # Vemos como nos ha devuelto 20 repuestos del mismo 
+    print("Los productos adquiridos son:", repuesto_necesitado) # Vemos como nos ha devuelto 20 repuestos del mismo 
 
-    mi_flota.listar_repuestos() # Vemos como se ha reducido en 2
+    mi_flota.listar_repuestos() # Vemos como se ha reducido en 20 los tornillos de Diamante
 
     
