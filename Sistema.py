@@ -37,8 +37,8 @@ class ErrorStockInsuficiente(ErrorImperio):
     pass
 
 # ------------------------------ 
-
 # Enumeraciones presentes en el diagrama UML con el módulo enum
+
 class EClase(Enum):
     EJECUTOR = 0
     ECLIPSE = 1
@@ -52,16 +52,25 @@ class EUbicacion(Enum):
 
 
 # ------------------------------ 
-
-
 # Creamos la clase abstracta UnidadCombate con el módulo abc
 
 class UnidadCombate(metaclass=ABCMeta):
+    '''
+    TAD UnidadCombate (DESCRIPCIÓN: Clase  abstracta que define la interfaz base para cualquier entidad, naves, vehiculos terrestres
+    y demás. No puede ser instanciada directamente. Sus atributos son id_combate y _num_cod; VALORES: str e int; OPERACIONES: __init__,
+    mostrar_informacion(), get_repuestos(), get_catalogo())
+    '''
 
     def __init__(self, id_combate : str, num_cod : int):
+        '''
+        CrearUnidadCombate(str,int)--> UnidadCombate
+        Efecto: crea un objeto UnidadCombate con id_combate, y _num_cod
+        '''
         self.id_combate = id_combate
         self._num_cod = num_cod # Importante calificar este atributo como privado al ser una identifiación de codificación
 
+    
+    # Todos sus métodos son métodos abstractos
     @abstractmethod
 
     def mostrar_informacion(self):
@@ -147,15 +156,17 @@ class TripuPasaje():
 
 class Nave(UnidadCombate):
     '''
-    TAD Nave (DESCRIPCIÓN: Subclase de UnidadCombate que representa todas las naves. Tienen como atributos id_combate y num_cod (heredado de UnidadCombate) y un nombre y una lista de objetos de la clase Repuesto;
-    VALORES: dos str(id_combate y nombre), un int (num_cod) y una list (piezas_repuesto); OPERACIONES: __init__, consultar_repuesto, mostrar_información,get_repuestos, get_catalogo y anyadir_catalogo)
+    TAD Nave (DESCRIPCIÓN: Subclase de UnidadCombate que representa todas las naves. Tienen como atributos id_combate y num_cod (heredado de UnidadCombate) y un nombre;
+    VALORES: dos str(id_combate y nombre), un int (num_cod); OPERACIONES: __init__, consultar_repuesto, mostrar_información,get_repuestos, get_catalogo y anyadir_catalogo)
     '''
 
     def __init__(self, id_combate: str, num_cod: int, nombre: str):
         '''
         CrearNave(str,int,str)--> Nave
         Efecto: Inicializa la nave llamando al constructor de la superclase UnidadCombate con super() para 
-        recibir los datos id_combate y num_cod, e inicializa su nombre.
+        recibir los datos id_combate y num_cod, e inicializa su nombre. Además, crea una lista vacía piezas_repuesto que 
+        actuará como el catálogo de componentes técnicos que la nave puede utilizar. No la pasamos como atirbuto porque debe ir añadiendo
+        sólo los repuestos disponibles en nuestra flota, que inicialmente puede no haber a la hora de recibir la nave.
         '''
         super().__init__(id_combate, num_cod)
         self.nombre = nombre
@@ -167,14 +178,13 @@ class Nave(UnidadCombate):
         Efecto: Busca si un repuesto con un nombre específico (nombre) forma parte del catalogo de la nave.
         Gestiona mayusculas/minúsculas y espacios para evitar errores de usuario para comparar ocn piezas_repuesto.
         Si está dentro de su catalogo de repuestos (piezas_repuesto) devuelve True.
+        Empleamos T/F en vez de la excepción ErrorRepuestoNoCatalogo porque no queremos que se termine el programa.
         '''
         busqueda = nombre.lower().strip()
         for repuesto in self.piezas_repuesto: 
             if repuesto.nombre.lower().strip() == busqueda:
                 return True
-        return False
-        # o podemos lanzar un error
-        # raise ErrorRepuestoNoCatalogo(f"La nave '{self.nombre}' no tiene el repuesto '{nombre}')
+        return False 
 
     
     def mostrar_informacion(self):
@@ -278,7 +288,7 @@ class CazaEstelar(Nave):
         '''
         Efecto: sobreescribe el método de la superclase Nave para mostrar la información relativa de este tipo de Nave
         '''
-        print(f'd_combate: {self.id_combate} -- Num_cod: {self._num_cod} -- Nombre: {self.nombre}')
+        print(f'd_combate: {self.id_combate} -- Num_cod: {self._num_cod} -- Nombre: {self.nombre}')
         
 
 # ------------------------------ 
@@ -288,7 +298,6 @@ class Almacen():
     TAD Almacen (DESCRIPCIÓN: Clase que representa un almacén,los atributos que tiene son nombre y localización; VALORES: str ;
     OPERACIONES: __init__,dar_de_alta, comprobar_stock, contar_existencias, actualizar,obtener_catalogo, obtener_repuesto.
     '''
-    
     
     def __init__(self, nombre: str, localizacion: str):
         '''
@@ -300,8 +309,7 @@ class Almacen():
         self.nombre = nombre
         self.localizacion = localizacion
         self.catalogo = []
-
-        
+ 
     
     def dar_de_alta(self, nombre:str, proveedor:str, cantidad:int, precio:int):
         '''
@@ -312,7 +320,7 @@ class Almacen():
     
     
     
-    def comprobar_stock(self, nombre_repuesto): #devuelve si hay stock de ese repuesto que consulta
+    def comprobar_stock(self, nombre_repuesto):
         '''
         Efecto: Devolver un booleano que indique si hay stock de un repuesto que queremos consultar a partir de su nombre.
         Para ello recorremos todos los elementos disponibles en el catalogo de esta instancia de Almacén y depuramos
@@ -330,11 +338,11 @@ class Almacen():
                     return True, cantidad
                 else:
                     return False, 0
-        raise ErrorRepuestoNoCatalogo(f"El repuesto '{nombre_repuesto}' no existe en el catálogo.")
+        raise ErrorRepuestoNoCatalogo(f"El repuesto '{nombre_repuesto}' no existe en el catálogo.") 
     
     
     
-    def contar_existencias(self): #contar las existencias del almacen de todos los repuestos
+    def contar_existencias(self): 
         '''
         Efecto: Contamos cuantas existencias, de todos los tipos de repuesto, tiene un almacén. Para ello
         recorremos todos los repuestos del catalogo y sacamos el stock de cada uno. Esa cantidad se va sumando a un contador
@@ -360,9 +368,9 @@ class Almacen():
         for repuesto in self.catalogo: 
             if repuesto.nombre.lower() == nombre_repuesto.lower():
                 nuevo_stock = repuesto._get_numero() + cantidad
-                if nuevo_stock < 0: #no puede haber stock negativo
+                if nuevo_stock < 0: 
                     raise ErrorStockInsuficiente(f'Stock insuficiente')
-                repuesto._set_numero(nuevo_stock)    # no haria falta un set_numero????? 
+                repuesto._set_numero(nuevo_stock) 
                 print(f'Stock actualizado')
                 return
         raise ErrorRepuestoNoCatalogo(f"El repuesto '{nombre_repuesto}' no existe en el catálogo. Hay que darlo de alta en el sistema.")  
@@ -523,28 +531,21 @@ class FlotaEspacial():
             raise ErrorRepuestoNoCatalogo(f"El repuesto '{nombre_repuesto} no está en el catálogo de la Nave '{id}'.")
 
         for almacen in self.almacenes:
-            comprobacion, cant_alm = almacen.comprobar_stock(nombre_repuesto)
-            if comprobacion: 
-                if cant_alm>=cantidad:
+            try:
+                comprobacion, cant_alm = almacen.comprobar_stock(nombre_repuesto)
+                if comprobacion and cant_alm>=cantidad:
                     almacen.actualizar(nombre_repuesto, -cantidad)
                     repuesto = almacen.obtener_repuesto(nombre_repuesto)
                     return Repuesto(nombre_repuesto, repuesto.proveedor, cantidad, repuesto.precio)
-                else: 
-                    raise ErrorStockInsuficiente(f"Stock insuficiente en el almacén '{almacen.nombre}'. Cantidad disponible: {cant_alm}")      
-        raise ErrorRepuestoNoCatalogo(f"No hay repuestos del tipo '{nombre_repuesto}' en ningún almacén.")
-
-
-             
+                continue # si no hay suficiente, pasamos al siguiente almacén
+            except ErrorRepuestoNoCatalogo: #si el repuesto no existe en este almacén, ignoramos el error y pasamos al siguiente
+                continue
+        raise ErrorStockInsuficiente(f"No hay stock suficiente de '{nombre_repuesto}' en toda la flota.")
+            
+         
  
 # ------------------------------        
 if __name__ == "__main__":
-
-
-
-    # -- PRUEBA MARÍA (ANOTADO JOSE) --
-
-
-    # Poner en las funciones donde modificas numero, una funcion en repuesto para modificarlo? Y así evitar _numer
 
     # CREAMOS LA FLOTA Y UN ALMACÉN
     print("Pruebas de OPERARIO" + '\n')
@@ -557,7 +558,7 @@ if __name__ == "__main__":
     print(f'Almacen: {almacen_1.nombre} -> Existencias: {almacen_1.contar_existencias()}')
 
     # CREAMOS UNA NAVE Y LA AÑADIMOS A LA FLOTA
-    nav1 = NaveEstelar("MCN-2005", 123, 'MCN', 10, 5, EClase.ECLIPSE ) 
+    nav1 = NaveEstelar("MCN-2005", 123, 'MCN', 10, 5, EClase.EJECUTOR) 
     mi_flota.anyadir_nave(nav1)
     nav1.mostrar_informacion()
     
@@ -574,19 +575,13 @@ if __name__ == "__main__":
     print('Stock final: \n')
     mi_flota.listar_repuestos()
     
-    
     # - Eliminar
     mi_flota.actualizar('Tornillo oro',-12)
     print(f'Stock final: {mi_flota.listar_repuestos()}')
     
-   
-
-
-    # -- PRUEBA JOSE 
     print("PRUEBAS DE COMANDANTE" + '\n')
 
     mi_flota.anyadir_repuesto_a_nave('MCN-2005', 'Tornillo de Diamante', 'Marias', 0, 20)
-    # HE PENSADO PONER ESTO DESDE MI FLOTA??
     
     
     mi_flota.dar_de_alta('Tornillo de Diamante', 'Locs', 200, 20, 'Almacen Maria')
