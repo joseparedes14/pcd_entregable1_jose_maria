@@ -581,16 +581,12 @@ if __name__ == "__main__":
     
     print("PRUEBAS DE COMANDANTE" + '\n')
 
+
+    # AÑADIMOS UN REPUESTO MÁS A LA NAVE PARA PROBAR EL MÉTODO DE ADQUIRIR REPUESTO (no empleamos una prueba de consultar repuesto específica puesto que está contenida en adquirir repuesto)
     mi_flota.anyadir_repuesto_a_nave('MCN-2005', 'Tornillo de Diamante', 'Marias', 0, 20)
-    
-    
     mi_flota.dar_de_alta('Tornillo de Diamante', 'Locs', 200, 20, 'Almacen Maria')
-
     mi_flota.listar_repuestos()
-    
-
     repuesto_necesitado = mi_flota.adquirir_repuesto('Tornillo de Diamante', 'MCN-2005', 20)
-
     print("Los productos adquiridos son:", repuesto_necesitado) # Vemos como nos ha devuelto 20 repuestos del mismo 
 
     mi_flota.listar_repuestos() # Vemos como se ha reducido en 20 los tornillos de Diamante
